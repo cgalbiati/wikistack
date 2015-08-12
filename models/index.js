@@ -16,20 +16,51 @@ var pageSchema = new mongoose.Schema({
   author:   {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
 });
 
-personSchema.virtual('page.route').get(function (){
+pageSchema.virtual('route').get(function (){
   return '/wiki/' + this.urlTitle;
 })
 
 var userSchema = new mongoose.Schema({
-  name: {first:  {type: String, required: true},
-          last:  {type: String, required: true}},
+  name:  {type: String, required: true},
   email:  {type: String, required: true, unique: true}
 });
 
 var Page = mongoose.model('Page', pageSchema);
 var User = mongoose.model('User', userSchema);
 
+var makeURL = function(title) {
+  //use regex to replace spaces and weird characters
+  var regex = /[^\w]/g
+  return title.replace(regex, '_')
+}
+
+var findOrCreateUser = function(reqBody) {
+  console.log('looking for author')
+  User.findOne({email: reqBody.email}).then(function(user) {
+    if (!user) {
+      user = new User({name: reqBody.name,
+          email: reqBody.email})
+      user.save();
+    }
+    console.log(user._id);
+    return user._id;  
+  })
+};
+
+
+var makePage = function(authorId, reqBody){
+  var title = reqBody.title;
+  var content = reqBody.title;
+  var tagArr = reqBody.tags.split(',');
+  return new Page({title: title, content: content, urlTitle: makeURL(title), tags: tagArr, author: authorId})
+};
+
+
 module.exports = {
   Page: Page,
-  User: User
+  User: User,
+  makeURL: makeURL,
+  makePage: makePage,
+  findOrCreateUser: findOrCreateUser
+
 };

@@ -5,6 +5,7 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var swig = require('swig');
+require('./filters')(swig);
 
 var routes = require('./routes/index');
 var wikiRouter = require('./routes/wiki');
@@ -43,6 +44,7 @@ app.use(function(req, res, next) {
 if (app.get('env') === 'development') {
   swig.setDefaults({ cache: false });
   app.use(function(err, req, res, next) {
+    console.log(err.message)
     res.status(err.status || 500);
     res.render('error', {
       message: err.message,
